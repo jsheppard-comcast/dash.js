@@ -50,48 +50,63 @@ function KeySystemPlayReady() {
     let instance;
     let messageFormat = 'utf16';
 
-    function getRequestHeadersFromMessage(message) {
-        var msg,
-            xmlDoc;
-        var headers = {};
-        var parser = new DOMParser();
-        var dataview = (messageFormat === 'utf16') ? new Uint16Array(message) : new Uint8Array(message);
+    function stringMessage(message) {
+        return String.fromCharCode.apply(null, new Uint8Array(message));
+    }
 
-        msg = String.fromCharCode.apply(null, dataview);
-        xmlDoc = parser.parseFromString(msg, 'application/xml');
+    function getRequestHeadersFromMessage() {
+        // var msg,
+        //     xmlDoc;
+        // var headers = {};
+        // var parser = new DOMParser();
+        // var dataview = (messageFormat === 'utf16') ? new Uint16Array(message) : new Uint8Array(message);
 
-        var headerNameList = xmlDoc.getElementsByTagName('name');
-        var headerValueList = xmlDoc.getElementsByTagName('value');
-        for (var i = 0; i < headerNameList.length; i++) {
-            headers[headerNameList[i].childNodes[0].nodeValue] = headerValueList[i].childNodes[0].nodeValue;
-        }
-        // some versions of the PlayReady CDM return 'Content' instead of 'Content-Type'.
-        // this is NOT w3c conform and license servers may reject the request!
-        // -> rename it to proper w3c definition!
-        if (headers.hasOwnProperty('Content')) {
-            headers['Content-Type'] = headers.Content;
-            delete headers.Content;
-        }
-        return headers;
+        var known_headers = {
+            'Content-Type': 'text/xml; charset=utf-8',
+            //'Cache-Control': 'no-cache',
+            //'use_keep_alive': 'true',
+            //'SEND_SOAP_ACTION': 'true',
+            'SOAPAction': 'http://schemas.microsoft.com/DRM/2007/03/protocols/AcquireLicense'
+        };
+
+        return known_headers;
+
+        // msg = String.fromCharCode.apply(null, dataview);
+        // xmlDoc = parser.parseFromString(msg, 'application/xml');
+        // var headerNameList = xmlDoc.getElementsByTagName('name');
+        // var headerValueList = xmlDoc.getElementsByTagName('value');
+        // for (var i = 0; i < headerNameList.length; i++) {
+        //     headers[headerNameList[i].childNodes[0].nodeValue] = headerValueList[i].childNodes[0].nodeValue;
+        // }
+        // // some versions of the PlayReady CDM return 'Content' instead of 'Content-Type'.
+        // // this is NOT w3c conform and license servers may reject the request!
+        // // -> rename it to proper w3c definition!
+        // if (headers.hasOwnProperty('Content')) {
+        //     headers['Content-Type'] = headers.Content;
+        //     delete headers.Content;
+        // }
+        // return headers;
     }
 
     function getLicenseRequestFromMessage(message) {
-        var msg,
-            xmlDoc;
-        var licenseRequest = null;
-        var parser = new DOMParser();
-        var dataview = (messageFormat === 'utf16') ? new Uint16Array(message) : new Uint8Array(message);
+        // var msg,
+        //     xmlDoc;
+        // var licenseRequest = null;
+        // var parser = new DOMParser();
+        // var dataview = (messageFormat === 'utf16') ? new Uint16Array(message) : new Uint8Array(message);
 
-        msg = String.fromCharCode.apply(null, dataview);
-        xmlDoc = parser.parseFromString(msg, 'application/xml');
-
-        if (xmlDoc.getElementsByTagName('Challenge')[0]) {
-            var Challenge = xmlDoc.getElementsByTagName('Challenge')[0].childNodes[0].nodeValue;
-            if (Challenge) {
-                licenseRequest = BASE64.decode(Challenge);
-            }
-        }
-        return licenseRequest;
+        var msg = stringMessage(message);
+        //console.log('eme:playready:req=' + msg);
+        return msg;
+        // msg = String.fromCharCode.apply(null, dataview);
+        // xmlDoc = parser.parseFromString(msg, 'application/xml');
+        // if (xmlDoc.getElementsByTagName('Challenge')[0]) {
+        //     var Challenge = xmlDoc.getElementsByTagName('Challenge')[0].childNodes[0].nodeValue;
+        //     if (Challenge) {
+        //         licenseRequest = BASE64.decode(Challenge);
+        //     }
+        // }
+        // return licenseRequest;
     }
 
     function getLicenseServerURLFromInitData(initData) {
@@ -218,6 +233,7 @@ function KeySystemPlayReady() {
         uuid: uuid,
         schemeIdURI: schemeIdURI,
         systemString: systemString,
+        stringMessage: stringMessage,
         getInitData: getInitData,
         getRequestHeadersFromMessage: getRequestHeadersFromMessage,
         getLicenseRequestFromMessage: getLicenseRequestFromMessage,
