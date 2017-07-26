@@ -238,7 +238,7 @@ function ProtectionModel_01b(config) {
         if (!protectionKeyController.isClearKey(keySystem)) {
             // Send our request to the CDM
             videoElement[api.addKey](keySystem.systemString,
-                new Uint8Array(message), sessionToken.initData, sessionID);
+                new Uint8Array(message), new Uint8Array(sessionToken.initData), sessionID);
         } else {
             // For clearkey, message is a ClearKeyKeySet
             for (var i = 0; i < message.keyPairs.length; i++) {
