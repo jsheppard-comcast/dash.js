@@ -46,6 +46,7 @@ const schemeIdURI = 'urn:uuid:' + uuid;
 function KeySystemWidevine() {
 
     let instance;
+    let messageFormat = 'utf8';
 
     function getInitData(cp) {
         return CommonEncryption.parseInitDataFromContentProtection(cp);
@@ -56,11 +57,36 @@ function KeySystemWidevine() {
     }
 
     function getLicenseRequestFromMessage(message) {
-        return new Uint8Array(message);
+        var dataview = messageFormat === 'utf16' ? new Uint16Array(message) : new Uint8Array(message);
+
+        var b64msg = String.fromCharCode.apply(null, dataview);
+        console.log('CCAD: length of b64msg ' + b64msg.length);
+        var msg = window.atob(b64msg);
+        var byteNumbers = new Array(msg.length);
+        for (var i = 0; i < msg.length; i++) {
+            byteNumbers[i] = msg.charCodeAt(i);
+        }
+        var byteArray = new Uint8Array(byteNumbers);
+        return byteArray;
     }
 
     function getLicenseServerURLFromInitData(/*initData*/) {
         return null;
+    }
+
+    /**
+     * It seems that some PlayReady implementations return their XML-based CDM
+     * messages using UTF16, while others return them as UTF8.  Use this function
+     * to modify the message format to expect when parsing CDM messages.
+     *
+     * @param {string} format the expected message format.  Either "utf8" or "utf16".
+     * @throws {Error} Specified message format is not one of "utf8" or "utf16"
+     */
+    function setPlayReadyMessageFormat(format) {
+        if (format !== 'utf8' && format !== 'utf16') {
+            throw new Error('Illegal PlayReady message format! -- ' + format);
+        }
+        messageFormat = format;
     }
 
     instance = {
@@ -70,7 +96,8 @@ function KeySystemWidevine() {
         getInitData: getInitData,
         getRequestHeadersFromMessage: getRequestHeadersFromMessage,
         getLicenseRequestFromMessage: getLicenseRequestFromMessage,
-        getLicenseServerURLFromInitData: getLicenseServerURLFromInitData
+        getLicenseServerURLFromInitData: getLicenseServerURLFromInitData,
+        setPlayReadyMessageFormat: setPlayReadyMessageFormat
     };
 
     return instance;

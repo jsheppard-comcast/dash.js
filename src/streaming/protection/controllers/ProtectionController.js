@@ -473,11 +473,31 @@ function ProtectionController(config) {
         } else {
             url = keySystem.getLicenseServerURLFromInitData(CommonEncryption.getPSSHData(sessionToken.initData));
             if (!url) {
-                url = e.data.laURL;
+                url = e.data.defaultURL;
             }
         }
         // Possibly update or override the URL based on the message
         url = licenseServerData.getServerURLFromMessage(url, message, messageType);
+
+        log('CCAD KS = ' + keySystem);
+        if (keySystemString === 'com.widevine.alpha') {
+            var msgString = String.fromCharCode.apply(null, new Uint8Array(message));
+            var xhrMsg = null;
+            var decoded_message = window.atob(msgString);
+
+            // Use the URL to decide if sending a license request or a provisioning request
+            if (url.includes('certificateprovisioning')) {
+                log('CCAD: Sending message to ID server');
+                url = url + '&signedRequest=' + decoded_message;
+                messageType = 'provision-request';
+            } else {
+                log('CCAD: Sending message to license server');
+                xhrMsg = message;
+            }
+
+            log('CCAD: URL = ' + url);
+            log('CCAD: message type = ' + messageType);
+        }
 
         // Ensure valid license server URL
         if (!url) {
@@ -528,7 +548,18 @@ function ProtectionController(config) {
             xhr.withCredentials = true;
         }
 
-        xhr.send(keySystem.getLicenseRequestFromMessage(message));
+        var messageToSend = keySystem.getLicenseRequestFromMessage(message);
+        if (keySystemString === 'com.widevine.alpha') {
+            if (messageType === 'provision-request') {
+                log('DRM [CCAD]: Provision request being done via URL');
+                messageToSend = null;
+            }
+            else {
+                log('DRM [CCAD]: License request being sent');
+            }
+        }
+
+        xhr.send(keySystem.getLicenseRequestFromMessage(messageToSend));
     }
 
     function onNeedKey(event) {

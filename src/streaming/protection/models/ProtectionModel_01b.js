@@ -237,6 +237,7 @@ function ProtectionModel_01b(config) {
         var sessionID = sessionToken.sessionID;
         if (!protectionKeyController.isClearKey(keySystem)) {
             // Send our request to the CDM
+            log('CCAD: sessionToken: ' + sessionToken.initData);
             videoElement[api.addKey](keySystem.systemString,
                 new Uint8Array(message), new Uint8Array(sessionToken.initData), sessionID);
         } else {
