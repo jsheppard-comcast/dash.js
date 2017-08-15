@@ -479,7 +479,7 @@ function ProtectionController(config) {
         // Possibly update or override the URL based on the message
         url = licenseServerData.getServerURLFromMessage(url, message, messageType);
 
-        log('CCAD KS = ' + keySystem);
+        // TODO Temporary workaround for provisioning in Widevine DRM until EME v3
         if (keySystemString === 'com.widevine.alpha') {
             var msgString = String.fromCharCode.apply(null, new Uint8Array(message));
             var xhrMsg = null;
@@ -487,16 +487,16 @@ function ProtectionController(config) {
 
             // Use the URL to decide if sending a license request or a provisioning request
             if (url.includes('certificateprovisioning')) {
-                log('CCAD: Sending message to ID server');
+                log('DRM [Widevine]: Sending message to ID server');
                 url = url + '&signedRequest=' + decoded_message;
                 messageType = 'provision-request';
             } else {
-                log('CCAD: Sending message to license server');
+                log('DRM [Widevine]: Sending message to license server');
                 xhrMsg = message;
             }
 
-            log('CCAD: URL = ' + url);
-            log('CCAD: message type = ' + messageType);
+            log('DRM [Widevine]: URL = ' + url);
+            log('DRM [Widevine]: message type = ' + messageType);
         }
 
         // Ensure valid license server URL
@@ -549,17 +549,18 @@ function ProtectionController(config) {
         }
 
         var messageToSend = keySystem.getLicenseRequestFromMessage(message);
+        // TODO Temporary workaround for provisioning in Widevine DRM until EME v3
         if (keySystemString === 'com.widevine.alpha') {
             if (messageType === 'provision-request') {
-                log('DRM [CCAD]: Provision request being done via URL');
+                log('DRM [Widevine]: Provision request being done via URL');
                 messageToSend = null;
             }
             else {
-                log('DRM [CCAD]: License request being sent');
+                log('DRM [Widevine]: License request being sent');
             }
         }
 
-        xhr.send(keySystem.getLicenseRequestFromMessage(messageToSend));
+        xhr.send(messageToSend);
     }
 
     function onNeedKey(event) {

@@ -60,7 +60,6 @@ function KeySystemWidevine() {
         var dataview = messageFormat === 'utf16' ? new Uint16Array(message) : new Uint8Array(message);
 
         var b64msg = String.fromCharCode.apply(null, dataview);
-        console.log('CCAD: length of b64msg ' + b64msg.length);
         var msg = window.atob(b64msg);
         var byteNumbers = new Array(msg.length);
         for (var i = 0; i < msg.length; i++) {
